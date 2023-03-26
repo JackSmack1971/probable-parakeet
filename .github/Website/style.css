@@ -1,9 +1,25 @@
-/* Define a default font for the page */
+:root {
+  --color1: #F94144;
+  --color2: #F3722C;
+  --color3: #F8961E;
+  --color4: #F9844A;
+  --color5: #F9C74F;
+  --color6: #90BE6D;
+  --color7: #43AA8B;
+  --color8: #4D908E;
+  --color9: #577590;
+  --color10: #277DA1;
+  --background-color: #F5F5F5;
+  --text-color: #333;
+  --text-light-color: #888;
+  --border-color: #ccc;
+}
 body {
   font-family: 'Roboto', sans-serif;
   font-size: 16px;
   line-height: 1.5;
-  color: #333;
+  background-color: var(--background-color);
+  color: var(--text-color);
 }
 
 /* Style the header */
@@ -13,8 +29,9 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 1em;
-  background-color: #fff;
-  border-bottom: 1px solid #ccc;
+  background-color: var(--color1);
+  color: var(--text-color);
+  border-bottom-color: var(--border-color);
 }
 
 .logo {
@@ -43,10 +60,13 @@ nav {
 }
 
 nav a {
-  ...
+  color: var(--text-light-color);
   transition: color 0.3s ease;
 }
 
+nav a:hover {
+  color: var(--color2);
+}
 
 /* Style the main content */
 main {
@@ -55,6 +75,7 @@ main {
 
 /* Style the hero section */
 #hero {
+  background-color: var(--color3);
   background-image: url('img/hero.jpg');
   background-position: center;
   background-repeat: no-repeat;
@@ -70,7 +91,7 @@ main {
 
 #hero p {
   font-size: clamp(1em, 2vw, 1.5em);
-  margin-bottom: 1.5em;
+    margin-bottom: 1.5em;
 }
 
 #hero .btn {
@@ -80,7 +101,7 @@ main {
 
 /* Style the featured section */
 #featured {
-  background-color: #f8f8f8;
+  background-color: var(--background-color);
   padding: 3em 1em;
   text-align: center;
 }
@@ -97,7 +118,7 @@ main {
 
 /* Style the grid layout */
 .grid {
-  ...
+  
   padding: 0 1em;
 }
 
@@ -108,6 +129,10 @@ main {
 }
 
 /* Style the articles in the grid */
+
+article {
+  border-color: var(--border-color);
+}
 
 article:hover {
   transform: translateY(-5px);
@@ -133,7 +158,8 @@ article p {
 
 /* Style the about section */
 #about {
-  background-color: #fff;
+  background-color: var(--color6);
+  color: var(--background-color);
   padding: 3em 1em;
   text-align: center;
 }
@@ -150,7 +176,8 @@ article p {
 
 /* Style the subscribe section */
 #subscribe {
-  background-color: #00BFFF;
+  background-color: var(--color9);
+  color: var(--background-color);
   text-align: center;
   padding: 5em;
 } 
