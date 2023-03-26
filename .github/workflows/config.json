@@ -1,0 +1,16 @@
+{
+  "profit_threshold": 0.01,
+  "quote_assets": ["ETH", "USDT", "USDC", "DAI", "BUSD"],
+  "real_time_data": false,
+  "api_keys": {
+    "uniswap": {
+      "api_key": "YOUR_API_KEY_HERE"
+    },
+    "sushiswap": {
+      "api_key": "YOUR_API_KEY_HERE"
+    },
+    "pancakeswap": {
+      "api_key": "YOUR_API_KEY_HERE"
+    }
+  }
+}
