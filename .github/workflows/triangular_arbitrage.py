@@ -203,5 +203,20 @@ async def check_for_profitable_trades() -> pd.DataFrame:
     return pd.DataFrame(results)
 
 # ... (main function and other parts of the code)
+# Create Flask app
+app = Flask(__name__)
+
+# Define route for API endpoint
+@app.route('/profitable_trades', methods=['GET'])
+def profitable_trades():
+    try:
+        results = asyncio.run(check_for_profitable_trades())
+        return jsonify(results.to_dict(orient='records'))
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+# Run Flask app
+if __name__ == '__main__':
+    app.run(debug=True)
 
 
