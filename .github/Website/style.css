@@ -1,0 +1,261 @@
+/* Define a default font for the page */
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+} 
+
+/* Style the header */
+header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1em;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+} 
+
+.logo {
+  font-size: 2em;
+} 
+
+nav {
+  width: 100%;
+} 
+
+.nav-menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+} 
+
+nav ul {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+} 
+
+nav li {
+  margin-right: 1em;
+} 
+
+nav a {
+  color: #333;
+  text-decoration: none;
+  padding: 0.5em;
+} 
+
+nav a:hover {
+  color: #00BFFF;
+}
+/* Style the main content */
+main {
+  margin-top: 1em;
+} 
+
+/* Style the hero section */
+#hero {
+  background-image: url('img/hero.jpg');
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  text-align: center;
+  padding: 5em;
+} 
+
+#hero h1 {
+  font-size: 4em;
+  margin-bottom: 0.5em;
+} 
+
+#hero p {
+  font-size: 1.5em;
+  margin-bottom: 1.5em;
+} 
+
+#hero .button {
+  font-size: 1.5em;
+  padding: 1em 2em;
+} 
+
+/* Style the featured section */
+#featured {
+  background-color: #F5F5F5;
+  text-align: center;
+  padding: 5em;
+} 
+
+#featured h2 {
+  font-size: 3em;
+  margin-bottom: 0.5em;
+} 
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-gap: 2em;
+  margin-top: 2em;
+} 
+
+article {
+  padding: 1em;
+  text-align: left;
+} 
+
+article h3 {
+  font-size: 2em;
+  margin-bottom: 0.25em;
+} 
+
+article p {
+  font-size: 1.5em;
+  margin-bottom: 1em;
+} 
+
+article .button {
+  font-size: 1.5em;
+  padding: 0.75em 1.5em;
+} 
+
+article img {
+  margin-bottom: 1em;
+} 
+
+/* Style the about section */
+#about {
+  background-color: #fff;
+  text-align: center;
+  padding: 5em;
+} 
+
+#about h2 {
+  font-size: 3em;
+  margin-bottom: 0.5em;
+} 
+
+#about p {
+  font-size: 1.5em;
+  margin-bottom: 1.5em;
+} 
+
+#about .button {
+  font-size: 1.5em;
+  padding: 1em 2em;
+} 
+
+/* Style the subscribe section */
+#subscribe {
+  background-color: #00BFFF;
+  text-align: center;
+  padding: 5em;
+} 
+
+#subscribe h2 {
+  color: #fff;
+  font-size: 3em;
+  margin-bottom: 0.5em;
+} 
+
+#subscribe p {
+  color: #fff;
+  font-size: 1.5em;
+  margin-bottom: 1.5em;
+} 
+
+#subscribe label {
+  display: block;
+  color: #fff;
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+} 
+
+#subscribe input[type="email"] {
+  font-size: 1.5em;
+  padding: 0.5em;
+} 
+
+#subscribe .button {
+  font-size: 1.5em;
+  padding: 1em 2em;
+  background-color: #fff;
+  color: #00BFFF;
+  border: none;
+  cursor: pointer;
+} 
+
+#subscribe .button:hover {
+  background-color: #00BFFF;
+  color: #fff;
+} 
+/* Style the content area */
+.content {
+  margin: 2em auto;
+  max-width: 800px;
+  padding: 0 1em;
+} 
+
+/* Style the featured section */
+#featured {
+  background-color: #f8f8f8;
+  padding: 3em 1em;
+  text-align: center;
+} 
+
+#featured h2 {
+  font-size: 3em;
+  margin-bottom: 1em;
+} 
+
+#featured p {
+  font-size: 1.2em;
+  margin-bottom: 2em;
+} 
+
+/* Style the grid layout */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-gap: 2em;
+} 
+
+/* Style the articles in the grid */
+article {
+  border: 1px solid #ccc;
+  padding: 1em;
+} 
+
+article h3 {
+  font-size: 1.5em;
+  margin-bottom: 0.5em;
+} 
+
+article p {
+  font-size: 1.2em;
+  margin-bottom: 1em;
+} 
+
+.article img {
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 1em;
+} 
+
+/* Style the about section */
+#about {
+  background-color: #fff;
+  padding: 3em 1em;
+  text-align: center;
+} 
+
+#about h2 {
+  font-size: 3em;
+  margin-bottom: 1em;
+} 
+
+#about p {
+  font-size: 1.2em;
+  margin-bottom: 2em;
+}
