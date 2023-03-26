@@ -1,0 +1,79 @@
+//@version=5
+strategy("MACD RSI ADX ATR Trading Strategy with Support, Resistance, Ichimoku Cloud and Candlestick Patterns", overlay=true) 
+
+// Parameters
+fastLength = optimize(12, 5, 50, 1, "Fast Length")
+slowLength = optimize(26, 10, 100, 1, "Slow Length")
+signalLength = optimize(9, 5, 30, 1, "Signal Length")
+atrLength = optimize(14, 5, 50, 1, "ATR Length")
+rsiLength = optimize(14, 5, 30, 1, "RSI Length")
+adxLength = optimize(14, 5, 30, 1, "ADX Length")
+adxThreshold = optimize(25, 10, 50, 1, "ADX Threshold")
+cloudPeriods = input.int(26, "Ichimoku Cloud Periods")
+riskPercent = input(2.0, "Risk % per Trade", minval=0.1, maxval=100, step=0.1) 
+
+// Indicators
+[macdLine, signalLine, _] = ta.macd(close, fastLength, slowLength, signalLength)
+rsi = ta.rsi(close, rsiLength)
+adx = ta.adx(high, low, close, adxLength)
+atr = ta.atr(high, low, close, atrLength) 
+
+// Ichimoku Cloud
+[tenkanSen, kijunSen, senkouSpanA, senkouSpanB, chikouSpan] = ta.ichimoku(close, cloudPeriods, cloudPeriods*2, cloudPeriods*3, cloudPeriods) 
+
+// Conditions
+macdCondition = macdLine > signalLine
+rsiCondition = rsi < 30
+adxCondition = adx > adxThreshold
+atrCondition = atr > 2 * ta.atr(high, low, close, atrLength-1)
+cloudCondition = close > senkouSpanA and close > senkouSpanB and tenkanSen > kijunSen
+longCondition = macdCondition and rsiCondition and adxCondition and atrCondition and cloudCondition 
+
+// Support and Resistance Levels
+resistanceLevel = ta.highest(high, 20)
+supportLevel = ta.lowest(low, 20) 
+
+// Candlestick Patterns
+bullishEngulfing = ta.candleColor(ta.engage(high, low, close))
+bearishEngulfing = ta.candleColor(ta.engulfingup(high, low, close))
+threeLineStrike = ta.candleColor(ta.candlenumber("3LS"))
+threeBlackCrows = ta.candleColor(ta.candlenumber("3BC")) 
+
+// Additional Conditions
+aboveResistance = close > resistanceLevel
+belowSupport = close < supportLevel
+bullishCandle = bullishEngulfing == 1
+bearishCandle = bearishEngulfing == -1
+threeLineStrikeBullish = threeLineStrike == 1
+threeBlackCrowsBearish = threeBlackCrows == -1 
+
+// Buy and Sell Signals
+buySignal = longCondition and crossover(macdLine, signalLine) and aboveResistance and (bullishCandle or threeLineStrikeBullish)
+sellSignal = crossunder(macdLine, signalLine) and belowSupport and (bearishCandle or threeBlackCrowsBearish) 
+
+// Entry and Exit
+tradeRisk = atr * 2
+stopLoss = atr * 2 
+
+// Calculate Stop Loss and Take Profit Levels takeProfit = atr * 2 
+
+// Trailing Stop Loss trailingStop = ta.atr(high, low, close, atrLength) 
+
+// Position Sizing if tradeRisk > 0 positionSize = strategy.equity * riskPercent / (tradeRisk / 100) else positionSize = 0 
+
+// Calculate Entry Price entryPrice = ta.ema(close, 20)
+
+
+// Place Orders if buySignal strategy.entry("Buy", strategy.long, size=positionSize, when=buySignal, stop=entryPrice - trailingStop, limit=entryPrice + takeProfit) 
+
+if sellSignal strategy.close("Buy", when=sellSignal) 
+
+// Plotting plot(macdLine, color=color.blue) plot(signalLine, color=color.red) plot(rsi, color=color.orange) plot(adx, color=color.green) plot(atr, color=color.gray) plot(resistanceLevel, color=color.yellow) plot(supportLevel, color=color.yellow) plot(tenkanSen, color=color.purple, linewidth=2, title="Tenkan Sen") plot(kijunSen, color=color.fuchsia, linewidth=2, title="Kijun Sen")
+p1 = plot(senkouSpanA, color=color.blue, linewidth=2, title="Senkou Span A") p2 = plot(senkouSpanB, color=color.red, linewidth=2, title="Senkou Span B") fill(p1, p2, color=color.new(color.blue, 80)) 
+
+plot(chikouSpan, color=color.yellow, linewidth=2, title="Chikou Span") 
+
+plotshape(bullishCandle, style=shape.labelup, location=location.belowbar, color=color.green, text="Bullish Engulfing") plotshape(threeLineStrikeBullish, style=shape.labelup, location=location.belowbar, color=color.green, text="Three Line Strike") plotshape(bearishCandle, style=shape.labeldown, location=location.abovebar, color=color.red, text="Bearish Engulfing")
+plotshape(threeBlackCrowsBearish, style=shape.labeldown, location=location.abovebar, color=color.red, text="Three Black Crows") 
+
+hline(50, color=color.black)
