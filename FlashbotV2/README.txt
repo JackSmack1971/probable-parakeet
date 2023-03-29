@@ -1,10 +1,10 @@
 FlashbotV2
 FlashbotV2 is an updated version of the Flashbot
 contract, a smart contract that performs a
-frontrunning attack on the Uniswap decentralized
+frontrunning on the Uniswap decentralized
 exchange (DEX) to extract profits from the trades
 of other users. The contract uses a technique 
-called MEV (Maximal Extractable Value) to determine
+called MEV (Miner Extractable Value) to determine
 the best trades to front-run and to execute them
 in a way that maximizes its profits.
 
