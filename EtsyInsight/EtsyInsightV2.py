@@ -155,7 +155,34 @@ async def download_all(self) -> None:
     for shop in trending_shops:
         await self.download_shop_listings(shop, self.store_name) 
 
-async def main(api_key: str, region: str, store_name: str): # Set up logging logging.basicConfig(level=logging.INFO) logger = logging.getLogger(name) 
+async def main(api_key: str, region: str):
+    # Set up logging
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+
+    client = APIClient(api_key, region)
+
+    try:
+        trending_shops = await client.get_trending_shops()
+        logger.info(f"Found {len(trending_shops)} trending shops")
+
+        # Fetch shop listings and sales concurrently
+        for shop in trending_shops:
+            listings_future = asyncio.create_task(client.get_shop_listings(shop.id))
+            sales_future = asyncio.create_task(client.get_shop_sales(shop.id))
+
+            listings = await listings_future
+            logger.info(f"Fetched {len(listings)} listings for shop {shop.shop_name}")
+
+            sales = await sales_future
+            logger.info(f"Fetched {len(sales)} sales for shop {shop.shop_name}")
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"An error occurred while making a request to the Etsy API: {e}")
+    except aiohttp.ClientResponseError as e:
+        logger.error(f"The Etsy API returned an error: {e}")
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {e}") 
 
 # Create an API client
 client = APIClient(api_key, region) 
