@@ -1,4 +1,4 @@
-//v3.0.0// 
+//v4.0.0// 
 
 import os
 import logging
@@ -8,7 +8,12 @@ import time
 import json
 import schedule
 from typing import List, Set, Dict, Tuple
-from dotenv import load_dotenv 
+from dotenv import load_dotenv
+from threading import Thread, Lock
+from queue import Queue 
+
+import aiohttp
+import asyncio 
 
 load_dotenv() 
 
@@ -73,8 +78,6 @@ async def get_crypto_compare_news(api_key: str) -> Tuple[List[dict], int]:
         logging.error(f'JSON decoding error occurred: {json_error}')
         return [], 3600 
 
-# Functions for CoinPaprika and CoinGecko news APIs will be added here 
-
 async def get_all_news(config: Config) -> Tuple[List[dict], int]:
     """
     Retrieve news articles from multiple news sources using asynchronous requests 
@@ -86,9 +89,6 @@ async def get_all_news(config: Config) -> Tuple[List[dict], int]:
     Tuple[List[dict], int]: Tuple containing list of news articles and minimum rate limit reset time
     """
     crypto_compare_news, crypto_compare_reset = await get_crypto_compare_news(config.crypto_compare_api_key) 
-
-    # Call functions for CoinPaprika and CoinGecko news APIs here
-    # Merge their results with crypto_compare_news and determine the minimum rate limit reset time 
 
     all_news = crypto_compare_news
     min_reset_time = crypto_compare_reset 
