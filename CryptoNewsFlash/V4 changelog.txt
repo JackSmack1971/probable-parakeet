@@ -1,0 +1,27 @@
+• Added aiohttp library to handle asynchronous requests. 
+
+• Implemented multi-threading with asyncio for efficient and responsive API requests. 
+
+• Refactored get_crypto_compare_news function to use aiohttp and asyncio for asynchronous requests. 
+
+• Created get_all_news function to handle multiple news sources and asynchronous requests. 
+
+• Refactored schedule_posting function to use asyncio for scheduling and error handling. 
+
+• Implemented pagination for the CryptoCompare API by using the 'page' parameter in the API request. 
+
+• Added input validation to the Config class for bot tokens, channel IDs, and API keys. 
+
+• Improved error handling for API request failures, JSON parsing errors, and Telegram API issues. 
+
+• Prevented duplicate news articles from being posted in the Telegram channel by tracking already posted articles. 
+
+• Updated comments and documentation for better readability, maintainability, and self-explanation. 
+
+• Optimized loops, data structures, and memory usage for better efficiency. 
+
+• Implemented environment variables for securely storing sensitive information like API keys and bot tokens. 
+
+• Refactored the code into separate functions or classes for modularity and code reusability. 
+
+• Tested the script for various scenarios and edge cases to ensure its reliability and stability.
