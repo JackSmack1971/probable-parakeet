@@ -1,16 +1,14 @@
-v2.0.0
-------
-
-- Added separate functions for fetching news from CryptoCompare, CoinPaprika, and CoinGecko APIs (CoinPaprika and CoinGecko implementations need to be added).
-- Updated the `Config` class to include API keys for CoinPaprika and CoinGecko news sources.
-- Modified the main function to fetch news from multiple sources by calling the respective functions and combining their results.
-- Updated the `post_news` function to accept a list of news articles instead of an API key.
-- Replaced the call to `get_news(api_key)` with the new `get_all_news(config)` function.
-- Updated the `schedule_posting` function to call the `get_all_news(config)` function and pass the result to the `post_news` function.
-- Implemented extraction of rate limit information from the API response headers.
-- Updated the news fetching functions for each API to return the rate limit information along with the news data.
-- Updated the `get_all_news` function to return the minimum rate limit reset value among all the APIs.
-- Modified the `schedule_posting` function to use the dynamic rate limit reset value for scheduling the next job.
-- Improved error handling, logging, and input validation.
-- Enhanced security by using environment variables for sensitive information storage.
-- Improved code modularity and reusability by refactoring code into separate functions or classes for different tasks.
+- Updated version number to v3.0.0
+- Removed unnecessary imports and added required libraries
+- Implemented error handling for API request failures, JSON parsing errors, and Telegram API issues
+- Prevented duplicate news articles from being posted in the Telegram channel by tracking already posted articles
+- Improved the efficiency of the code by optimizing loops, data structures, and memory usage
+- Implemented a more robust scheduling mechanism using asyncio to run the post_news function at regular intervals
+- Added input validation for user-provided data (bot tokens, channel IDs, and API keys) through the Config class
+- Safely stored sensitive information (API keys and bot tokens) using environment variables
+- Refactored the code into separate functions and classes for modularity and reusability
+- Enhanced the get_all_news function for better conciseness
+- Implemented asyncio for better performance using asynchronous requests
+- Added error handling and retry logic for API calls
+- Added additional logging for debugging and error tracking
+- Updated code formatting to conform to PEP8 standards
