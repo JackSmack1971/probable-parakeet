@@ -1,7 +1,16 @@
-• Updated the version number to v1.2.0. 
+v2.0.0
+------
 
-• Replaced the set type hint with Set[str] from the typing module for posted_articles in the post_news function signature, improving type hinting. 
-
-• Changed the interval parameter in the schedule_posting function to include a description of its unit (seconds). 
-
-• Other changes made in the code were solely for formatting purposes and do not affect the code's functionality.
+- Added separate functions for fetching news from CryptoCompare, CoinPaprika, and CoinGecko APIs (CoinPaprika and CoinGecko implementations need to be added).
+- Updated the `Config` class to include API keys for CoinPaprika and CoinGecko news sources.
+- Modified the main function to fetch news from multiple sources by calling the respective functions and combining their results.
+- Updated the `post_news` function to accept a list of news articles instead of an API key.
+- Replaced the call to `get_news(api_key)` with the new `get_all_news(config)` function.
+- Updated the `schedule_posting` function to call the `get_all_news(config)` function and pass the result to the `post_news` function.
+- Implemented extraction of rate limit information from the API response headers.
+- Updated the news fetching functions for each API to return the rate limit information along with the news data.
+- Updated the `get_all_news` function to return the minimum rate limit reset value among all the APIs.
+- Modified the `schedule_posting` function to use the dynamic rate limit reset value for scheduling the next job.
+- Improved error handling, logging, and input validation.
+- Enhanced security by using environment variables for sensitive information storage.
+- Improved code modularity and reusability by refactoring code into separate functions or classes for different tasks.
