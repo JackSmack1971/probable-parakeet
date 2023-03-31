@@ -1,0 +1,7 @@
+• Updated the version number to v1.2.0. 
+
+• Replaced the set type hint with Set[str] from the typing module for posted_articles in the post_news function signature, improving type hinting. 
+
+• Changed the interval parameter in the schedule_posting function to include a description of its unit (seconds). 
+
+• Other changes made in the code were solely for formatting purposes and do not affect the code's functionality.
