@@ -1,4 +1,4 @@
-//v2.0.0// 
+//v3.0.0// 
 
 import os
 import logging
@@ -19,9 +19,7 @@ class Config:
     def __init__(self):
         self.telegram_bot_token = os.getenv('TELEGRAM_BOT_TOKEN')
         self.telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
-        self.crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API_KEY')
-        self.coin_paprika_api_key = os.getenv('COIN_PAPRIKA_API_KEY')
-        self.coin_gecko_api_key = os.getenv('COIN_GECKO_API_KEY') 
+        self.crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API_KEY') 
 
     def validate(self) -> bool:
         """
@@ -42,19 +40,11 @@ class Config:
             logging.error('Error: CRYPTO_COMPARE_API_KEY is not set.')
             return False 
 
-        if not self.coin_paprika_api_key:
-            logging.error('Error: COIN_PAPRIKA_API_KEY is not set.')
-            return False 
-
-        if not self.coin_gecko_api_key:
-            logging.error('Error: COIN_GECKO_API_KEY is not set.')
-            return False 
-
         return True 
 
-def get_crypto_compare_news(api_key: str) -> Tuple[List[dict], int]:
+async def get_crypto_compare_news(api_key: str) -> Tuple[List[dict], int]:
     """
-    Retrieve news articles from CryptoCompare API 
+    Retrieve news articles from CryptoCompare API using asynchronous requests 
 
     Parameters:
     api_key (str): CryptoCompare API Key 
@@ -65,16 +55,18 @@ def get_crypto_compare_news(api_key: str) -> Tuple[List[dict], int]:
     url = f'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&api_key={api_key}' 
 
     try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()['Data']
-        rate_limit_reset = int(response.headers.get('X-RateLimit-Reset', 3600)) 
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                response.raise_for_status()
+                data = await response.json()
+                news_data = data['Data']
+                rate_limit_reset = int(response.headers.get('X-RateLimit-Reset', 3600)) 
 
-        if not isinstance(data, list):
-            raise ValueError('API response is not a list.') 
+                if not isinstance(news_data, list):
+                    raise ValueError('API response is not a list.') 
 
-        return data, rate_limit_reset
-    except requests.exceptions.RequestException as request_error:
+                return news_data, rate_limit_reset
+    except (aiohttp.ClientError, requests.exceptions.RequestException) as request_error:
         logging.error(f'Request error occurred: {request_error}')
         return [], 3600
     except (ValueError, KeyError, TypeError) as json_error:
@@ -83,9 +75,9 @@ def get_crypto_compare_news(api_key: str) -> Tuple[List[dict], int]:
 
 # Functions for CoinPaprika and CoinGecko news APIs will be added here 
 
-def get_all_news(config: Config) -> Tuple[List[dict], int]:
+async def get_all_news(config: Config) -> Tuple[List[dict], int]:
     """
-    Retrieve news articles from multiple news sources 
+    Retrieve news articles from multiple news sources using asynchronous requests 
 
     Parameters:
     config (Config): Configuration object containing API keys 
@@ -93,7 +85,7 @@ def get_all_news(config: Config) -> Tuple[List[dict], int]:
     Returns:
     Tuple[List[dict], int]: Tuple containing list of news articles and minimum rate limit reset time
     """
-    crypto_compare_news, crypto_compare_reset = get_crypto_compare_news(config.crypto_compare_api_key) 
+    crypto_compare_news, crypto_compare_reset = await get_crypto_compare_news(config.crypto_compare_api_key) 
 
     # Call functions for CoinPaprika and CoinGecko news APIs here
     # Merge their results with crypto_compare_news and determine the minimum rate limit reset time 
@@ -138,9 +130,9 @@ def post_news(bot: telegram.Bot, channel_id: str, news_data: List[dict], posted_
 
     return posted_articles.union(new_posted_articles) 
 
-def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interval: int):
+async def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interval: int):
     """
-    Schedule news articles posting at regular intervals 
+    Schedule news articles posting at regular intervals using asynchronous requests 
 
     Parameters:
     bot (telegram.Bot): Telegram bot instance
@@ -150,10 +142,10 @@ def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interva
     """
     posted_articles = set() 
 
-    def job():
+    async def job():
         nonlocal posted_articles
         try:
-            news_data, rate_limit_reset = get_all_news(config)
+            news_data, rate_limit_reset = await get_all_news(config)
             posted_articles = post_news(bot, channel_id, news_data, posted_articles)
             nonlocal interval
             interval = rate_limit_reset
@@ -161,22 +153,19 @@ def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interva
             logging.error(f'Error occurred while running job: {error}') 
 
     # Run the job immediately on startup
-    job() 
+    await job() 
 
     # Schedule the job to run at regular intervals
-    schedule.every(interval).seconds.do(job) 
-
-    # Keep running the scheduler
     while True:
         try:
-            schedule.run_pending()
+            await asyncio.sleep(interval)
+            await job()
         except Exception as error:
-            logging.error(f'Error occurred while running job: {error}')
-        time.sleep(1) 
+            logging.error(f'Error occurred while running job: {error}') 
 
-def main():
+async def main():
     """
-    Main function that runs the script
+    Main function that runs the script asynchronously
     """
     try:
         config = Config()
@@ -185,10 +174,9 @@ def main():
 
         bot = telegram.Bot(token=config.telegram_bot_token) 
 
-        schedule_posting(bot, config.telegram_channel_id, config, 3600)
+        await schedule_posting(bot, config.telegram_channel_id, config, 3600)
     except Exception as error:
-        logging.error(f'Unhandled exception occurred: {error}')
-
+        logging.error(f'Unhandled exception occurred: {error}') 
 
 if __name__ == '__main__':
     logging.basicConfig(
@@ -196,4 +184,4 @@ if __name__ == '__main__':
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[logging.StreamHandler()]
     )
-    main()
+    asyncio.run(main())
