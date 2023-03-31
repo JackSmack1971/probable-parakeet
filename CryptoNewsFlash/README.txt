@@ -1,4 +1,4 @@
-# CryptoNewsFlash v3.0.0 
+# CryptoNewsFlash v4.0.0
 
 CryptoNewsFlash is a Python script that retrieves news articles from various cryptocurrency news APIs and posts them to a Telegram channel. The script is designed to be efficient, secure, and easy to use. 
 
