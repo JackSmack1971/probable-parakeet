@@ -236,8 +236,7 @@ contract MyToken is ERC20, ReentrancyGuard {
         _approve(address(this), address(uniswapV2Router), tokenAmount); 
 
         // add the liquidity
-        uniswapV2Router.addLiquidityETH{value: ethAmount}(            address(this),
-            tokenAmount,
+        uniswapV2Router.addLiquidityETH{value: ethAmount}(address(this),tokenAmount,
             0, // slippage is unavoidable
             0, // slippage is unavoidable
             owner(),
