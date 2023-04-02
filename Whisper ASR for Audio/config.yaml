@@ -1,0 +1,11 @@
+import configparser
+
+config = configparser.ConfigParser()
+config.read('Config.ini')
+
+audio_file = config['audio']['file_path']
+model_file = config['model']['file_path']
+output_file = config['output']['file_path']
+output_format = config['output']['format']
+sampling_rate = int(config['transcription']['sampling_rate'])
+language = config['transcription']['language']
