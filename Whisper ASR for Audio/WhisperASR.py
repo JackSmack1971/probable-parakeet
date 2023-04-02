@@ -5,6 +5,7 @@ import json
 import datetime
 import logging
 import argparse
+import yaml
 from tqdm import tqdm
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
@@ -59,18 +60,21 @@ def main(args):
         raise ValueError(f"Invalid output format: {args.format}")
 
 def parse_args():
+    with open('config.yaml', 'r') as f:
+        config = yaml.safe_load(f)
+
     parser = argparse.ArgumentParser(description='Audio transcription using Whisper')
-    parser.add_argument('audio', metavar='audio', type=str, help='path to input audio file')
-    parser.add_argument('model', metavar='model', type=str, help='path to pre-trained model')
-    parser.add_argument('output', metavar='output', type=str, help='path to output file (without extension)')
-    parser.add_argument('--format', type=str, default='json', choices=['json', 'text', 'csv'],
+    parser.add_argument('audio', metavar='audio', type=str, default=config['audio']['file_path'], nargs='?', help='path to input audio file')
+    parser.add_argument('model', metavar='model', type=str, default=config['model']['file_path'], nargs='?', help='path to pre-trained model')
+    parser.add_argument('output', metavar='output', type=str, default=config['output']['file_path'], nargs='?', help='path to output file (without extension)')
+    parser.add_argument('--format', type=str, default=config['output']['format'], choices=['json', 'text', 'csv'],
                         help='output format (default: json)')
-    parser.add_argument('--sampling-rate', type=int, default=16000,
+    parser.add_argument('--sampling-rate', type=int, default=config['transcription']['sampling_rate'],
                         help='sampling rate of audio file in Hz (default: 16000)')
-    parser.add_argument('--language', type=str, default='en',
+    parser.add_argument('--language', type=str, default=config['transcription']['language'],
                         help='language code of audio file (default: en)')
     return parser.parse_args()
 
 if __name__ == '__main__':
     args = parse_args()
-    main(args)
+    main
