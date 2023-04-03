@@ -6,6 +6,8 @@ from web3.exceptions import BadFunctionCallOutput
 from eth_abi import encode_single, encode_abi
 from eth_utils import to_checksum_address 
 
+from web3.gas_strategies.time_based import fast_gas_price_strategy, medium_gas_price_strategy, slow_gas_price_strategy 
+
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s') 
 
@@ -31,168 +33,170 @@ contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
 
 # Define the gas price strategy
 def calculate_gas_price(w3, tx):
-    # Define the minimum and maximum gas prices to consider
-    min_gas_price = int(tx.gasPrice)
-    max_gas_price = w3.eth.gas_price_max 
+    # Define the desired profit margin
+    profit_margin = 0.02 
 
-    # Define the desired profit margin
-    profit_margin = 0.02 
+    # Define the maximum number of retries
+    max_retries = 3 
 
-    # Define the maximum number of retries
-    max_retries = 3 
+    # Get the current gas price from the network
+    current_gas_price = w3.eth.gas_price 
 
-    # Define the initial gas price to use
-    gas_price = min_gas_price 
+    # Get the gas limit of the pending transaction
+    pending_gas_limit = tx.gas 
 
-    # Define the initial transaction hash
-    tx_hash = None 
+    # Define the gas price strategies to consider
+    gas_price_strategies = [
+        (fast_gas_price_strategy, 1.25),
+        (medium_gas_price_strategy, 1.10),
+        (slow_gas_price_strategy, 1.05),
+    ] 
 
-    # Define the maximum profit found so far
-    max_profit = 0 
+    # Loop over the gas price strategies, retrying if necessary
+    for i in range(max_retries):
+        # Calculate the expected profit for each gas price strategy
+        expected_profits = []
+        for gas_price_strategy, multiplier in gas_price_strategies:
+            gas_price = gas_price_strategy(w3)
+            if gas_price is None:
+                continue
+            if gas_price < current_gas_price:
+                gas_price = current_gas_price
+            expected_profit = calculate_expected_profit(w3, tx, gas_price, pending_gas_limit)
+            expected_profits.append((gas_price, expected_profit * multiplier)) 
 
-    # Loop over the possible gas prices, retrying if necessary
-    for i in range(max_retries):
-        # Calculate the expected profit for this gas price
-        expected_profit = calculate_expected_profit(w3, tx, gas_price) 
+        # Sort the gas prices by expected profit
+        sorted_gas_prices = sorted(expected_profits, key=lambda x: x[1], reverse=True) 
 
-        # Check if this is the maximum profit found so far
-        if expected_profit > max_profit:
-            max_profit = expected_profit
-            tx_hash = None 
+        # Check if we have found a profitable transaction
+        for gas_price, expected_profit in sorted_gas_prices:
+            if expected_profit >= profit_margin * tx.value:
+                return gas_price 
 
-        # Check if we have found a profitable transaction
-        if expected_profit >= profit_margin * tx.value:
-            break 
+        # If not, retry using the highest gas price from the sorted list
+        if sorted_gas_prices:
+            gas_price = sorted_gas_prices[0][0]
+        else:
+            gas_price = current_gas_price
+        current_gas_price = min(gas_price * 1.1, w3.eth.gas_price_max) 
 
-        # If not, increase the gas price and try again
-        gas_price = int(gas_price * 1.1)
-        gas_price = min(gas_price, max_gas_price) 
-
-    # If we have found a profitable transaction, return the gas price
-    if tx_hash is not None:
-        return gas_price 
-
-    # If not, raise an exception
-    raise ValueError('Unable to find a profitable transaction') 
+    # If we have not found a profitable transaction, raise an exception
+    raise ValueError('Unable to find a profitable transaction') 
 
 # Define a helper function to calculate the expected profit for a given gas price
-def calculate_expected_profit(w3, tx, gas_price):
-    # Calculate the maximum amount that can be earned from the transaction
-    max_profit = tx.value - gas_price * tx.gas 
+def calculate_expected_profit(w3, tx, gas_price, pending_gas_limit 
 
-    # Get the current balance of the sender's account
-    try:
-        sender_balance = w3.eth.get_balance(tx.from)
-    except BadFunctionCallOutput:
-        # Return a negative profit if we can't get the sender's balance
-        return -1 
+def calculate_expected_profit(w3, tx, gas_price, pending_gas_limit): # Calculate the maximum amount that can be earned from the transaction max_profit = tx.value - gas_price * pending_gas_limit 
 
-      # Calculate the minimum amount that must be kept in the sender's account
-    min_balance = w3.eth.get_transaction_count(tx.from) * gas_price 
+# Get the current balance of the sender's account
+try:
+    sender_balance = w3.eth.get_balance(tx.from_address)
+except BadFunctionCallOutput:
+    # Return a negative profit if we can't get the sender's balance
+    return -1 
 
-    # Calculate the expected balance of the sender's account after the transaction
-    expected_balance = sender_balance - tx.value - gas_price * tx.gas 
+# Calculate the minimum amount that must be kept in the sender's account
+min_balance = w3.eth.get_transaction_count(tx.from_address) * gas_price 
 
-    # Calculate the expected profit after deducting the minimum balance
-    expected_profit = expected_balance - min_balance 
+# Calculate the expected balance of the sender's account after the transaction
+expected_balance = sender_balance - tx.value - gas_price * pending_gas_limit 
 
-    return expected_profit 
+# Calculate the expected profit after deducting the minimum balance
+expected_profit = expected_balance - min_balance 
 
-# Define the transaction creation function
-def create_new_tx(w3, tx, gas_price):
-    # Decode the function call data of the original transaction
-    function_data = contract.decode_function_input(tx.input) 
+return expected_profit 
 
-    # Extract the recipient address and the amount of tokens to transfer
-    recipient = function_data['args'][0]
-    amount = function_data['args'][1] 
+#Define the transaction creation function 
 
-    # Encode the function call data for the "transfer" function of the ERC20 contract
-    transfer_data = encode_abi(['address', 'uint256'], [to_checksum_address(recipient), amount])
-    data = contract.functions.transfer(to_checksum_address(recipient), amount).buildTransaction({'gasPrice': gas_price, 'gas': tx.gas, 'nonce': tx.nonce})['data'] 
+def create_new_tx(w3, tx, gas_price): # Decode the function call data of the original transaction function_data = contract.decode_function_input(tx.input) 
 
-    # Create a new transaction with the desired gas price and nonce
-    new_tx = {
-        'from': tx['from'],
-        'to': tx['to'],
-        'value': tx['value'],
-        'gasPrice': gas_price,
-        'gas': tx['gas'],
-        'nonce': tx['nonce'],
-        'data': data,
-    } 
+# Extract the recipient address and the amount of tokens to transfer
+recipient = function_data['args'][0]
+amount = function_data['args'][1] 
 
-    # Sign the transaction with the sender's private key
-    signed_tx = Account.sign_transaction(new_tx, private_key=YOUR_PRIVATE_KEY) 
+# Encode the function call data for the "transfer" function of the ERC20 contract
+transfer_data = encode_abi(['address', 'uint256'], [to_checksum_address(recipient), amount])
+data = contract.functions.transfer(to_checksum_address(recipient), amount).buildTransaction({'gasPrice': gas_price, 'gas': tx.gas, 'nonce': tx.nonce})['data'] 
 
-    return signed_tx 
+# Create a new transaction with the desired gas price and nonce
+new_tx = {
+    'from': tx['from'],
+    'to': tx['to'],
+    'value': tx['value'],
+    'gasPrice': gas_price,
+    'gas': tx['gas'],
+    'nonce': tx['nonce'],
+    'data': data,
+} 
 
-# Define the transaction broadcasting function
-def broadcast_tx(w3, new_tx):
-    # Broadcast the transaction to the network
-    tx_hash = w3.eth.send_raw_transaction(new_tx.rawTransaction) 
+# Sign the transaction with the sender's private key
+signed_tx = Account.sign_transaction(new_tx, private_key=YOUR_PRIVATE_KEY) 
 
-    logging.info('Broadcasting transaction: %s', tx_hash.hex()) 
+return signed_tx 
 
-# Define the unit tests
-def test_calculate_gas_price():
-    # TODO: Write unit tests for the calculate_gas_price function
-    pass 
+#Define the transaction broadcasting function 
 
-def test_create_new_tx():
-    # TODO: Write unit tests for the create_new_tx function
-    pass 
+def broadcast_tx(w3, new_tx): # Broadcast the transaction to the network tx_hash = w3.eth.send_raw_transaction(new_tx.rawTransaction) 
 
-def test_broadcast_tx():
-    # TODO: Write unit tests for the broadcast_tx function
-    pass 
+logging.info('Broadcasting transaction: %s', tx_hash.hex()) 
 
-# Run the unit tests
-test_calculate_gas_price()
-test_create_new_tx()
-test_broadcast_tx() 
+#Define the unit tests 
 
-# Define the main function
-def frontrun():
-    # Connect to Infura's Ethereum node
-    w3 = Web3(Web3.HTTPProvider(infura_url)) 
+def test_calculate_gas_price(): # TODO: Write unit tests for the calculate_gas_price function pass 
 
-    # Load the contract using Web3.py
-    contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI) 
+def test_create_new_tx(): # TODO: Write unit tests for the create_new_tx function pass 
 
-    # Create a filter for the mempool
-    event_filter = w3.eth.filter({
-        'topics': [EVENT_SIGNATURE],
-        'fromBlock': 'pending',
-        'toBlock': 'latest',
-    }) 
+def test_broadcast_tx(): # TODO: Write unit tests for the broadcast_tx function pass 
 
-    # Listen for incoming transactions in the mempool
-    for event in event_filter.get_new_entries():
-        logging.info('New transaction in mempool') 
+#Run the unit tests 
 
-        # Get the details of the transaction that triggered the event
-        tx = w3.eth.get_transaction(event['transactionHash']) 
+test_calculate_gas_price() test_create_new_tx() test_broadcast_tx() 
 
-        # Calculate the optimal gas price for the new transaction
-        gas_price = calculate_gas_price(w3, tx) 
+#Define the main function 
 
-        # Create a new transaction with the desired gas price and nonce
-        new_tx = create_new_tx(w3, tx, gas_price) 
+def frontrun(): # Connect to Infura's Ethereum node w3 = Web3(Web3.HTTPProvider(infura_url)) 
 
-        # Broadcast the transaction to the network
-        broadcast_tx(w3, new_tx) 
+# Load the contract using Web3.py
+contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI) 
 
-           # Wait for the transaction to be mined and print the status
-        receipt = w3.eth.wait_for_transaction_receipt(new_tx.hash, timeout=60)
-        if receipt['status'] == 1:
-            logging.info('Transaction succeeded: %s', new_tx.hash.hex())
-        else:
-            logging.warning('Transaction failed: %s', new_tx.hash.hex()) 
+# Create a filter for the mempool
+event_filter = w3.eth.filter({
+    'topics': [EVENT_SIGNATURE],
+    'fromBlock': 'pending',
+    'toBlock': 'latest',
+}) 
 
-if __name__ == '__main__':
-    try:
-        # Run the frontrunning function
-        frontrun()
-    except Exception as e:
-        logging.error('An error occurred: %s', str(e))
+# Listen for incoming transactions in the mempool
+for event in event_filter.get_new_entries():
+    logging.info('New transaction in mempool') 
+
+    # Get the details of the transaction that triggered the event
+    tx = w3.eth.get_transaction(event['transactionHash']) 
+
+    # Calculate the optimal gas price for the new transaction
+    try:
+        pending_gas_limit = w3.eth.getBlock('pending')['gasLimit']
+    except Exception:
+        # Set a default value if we are unable to fetch the pending block gas limit
+        pending_gas_limit = 12_000_000  # 12 million gas 
+
+    try:
+        gas_price = calculate_gas_price(w3, tx, pending_gas_limit)
+    except ValueError as e:
+        logging.warning(f"{e} for transaction {tx.hash.hex()}")
+        continue 
+
+    # Create a new transaction with the desired gas price and nonce
+    new_tx = create_new_tx(w3, tx, gas_price) 
+
+    # Broadcast the transaction to the network
+    broadcast_tx(w3, new_tx) 
+
+    # Wait for the transaction to be mined and print the status
+    receipt = w3.eth.wait_for_transaction_receipt(new_tx.hash, timeout=60)
+    if receipt['status'] == 1:
+        logging.info('Transaction succeeded: %s', new_tx.hash.hex())
+    else:
+        logging.warning('Transaction failed: %s', new_tx.hash.hex()) 
+
+if name == 'main': try: # Run the frontrunning function frontrun() except Exception as e: logging.error('An error occurred: %s', str(e))
