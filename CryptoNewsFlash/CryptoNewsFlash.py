@@ -5,13 +5,13 @@ import aiohttp
 import asyncio
 import json
 import schedule
-from typing import List, Set, Dict, Tuple
+from typing import List, Set, Dict, Tuple, AsyncIterable, AsyncIterator
 from dotenv import load_dotenv
 import telegram 
 
 load_dotenv() 
 
-# 1. Use the `logging.config.dictConfig` method to configure the logging
+# Use the `logging.config.dictConfig` method to configure the logging
 LOGGING_CONFIG = {
     'version': 1,
     'formatters': {
@@ -35,7 +35,7 @@ LOGGING_CONFIG = {
 
 logging.config.dictConfig(LOGGING_CONFIG) 
 
-# 6. Implement a custom exception for better error handling
+# Define a custom exception for better error handling
 class ConfigurationError(Exception):
     pass
 
@@ -50,7 +50,7 @@ class Config:
         self.telegram_channel_id = os.getenv('TELEGRAM_CHANNEL_ID')
         self.crypto_compare_api_key = os.getenv('CRYPTO_COMPARE_API_KEY') 
 
-    # 2. Implement proper error handling in the `validate` method
+    # Implement proper error handling in the `validate` method
     def validate(self) -> None:
         """
         Validate input data 
@@ -67,19 +67,21 @@ class Config:
         if not self.crypto_compare_api_key:
             raise ConfigurationError('Error: CRYPTO_COMPARE_API_KEY is not set.') 
 
-async def fetch_news_source(session: aiohttp.ClientSession, url: str) -> List[Dict]:
+
+async def fetch_news_source(session: aiohttp.ClientSession, url: str, timeout: int) -> List[Dict]:
     """
     Retrieve news articles from a specific URL using asynchronous requests. 
 
     Parameters:
     session (aiohttp.ClientSession): aiohttp ClientSession for making requests
     url (str): URL of the news source 
+    timeout (int): Timeout for the request in seconds 
 
     Returns:
     List[Dict]: List of news articles as dictionaries
     """
     try:
-        async with session.get(url) as response:
+        async with session.get(url, timeout=timeout) as response:
             response.raise_for_status()
             data = await response.json()
             news_data = data['Data'] 
@@ -88,57 +90,55 @@ async def fetch_news_source(session: aiohttp.ClientSession, url: str) -> List[Di
                 raise ValueError('API response is not a list.') 
 
             return news_data
-    except (aiohttp.ClientError, ValueError, KeyError, TypeError) as error:
-        # 3. Use f-strings in logging messages
-        logging.error(f'Error occurred while fetching news source ({url}): {error}')
-        return []
+    except aiohttp.ClientError as error:
+        logging.exception(f'Error occurred while fetching news source ({url}): {error}')
+    except (ValueError, KeyError, TypeError) as error:
+        logging.exception(f'Error occurred while processing news source ({url}): {error}')
+    except Exception as error:
+        logging.exception(f'Unhandled exception occurred while fetching news source ({url}): {error}')
+    return []
 
 
-async def get_crypto_compare_news(session: aiohttp.ClientSession, api_key: str) -> List[Dict]:
+async def get_crypto_compare_news(session: aiohttp.ClientSession, api_key: str, timeout: int) -> List[Dict]:
     """
     Retrieve news articles from CryptoCompare API using asynchronous requests. 
 
     Parameters:
     session (aiohttp.ClientSession): aiohttp ClientSession for making requests
     api_key (str): CryptoCompare API Key 
+    timeout (int): Timeout for the request in seconds 
 
     Returns:
     List[Dict]: List of news articles as dictionaries
     """
-    url = f'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&api_key={api_key}'
-    return await fetch_news_source(session, url)
+    url =f'https://min-api.cryptocompare.com/data/v2/news/?lang=EN&api_key={api_key}' return await fetch_news_source(session, url, timeout) 
 
+async def get_all_news(config:Config) -> AsyncIterable[List[Dict]]: """ Retrieve news articles from multiple news sources using asynchronous requests 
 
-async def get_all_news(config: Config) -> List[Dict]:
-    """
-    Retrieve news articles from multiple news sources using asynchronous requests. 
+Parameters:
+config (Config): Configuration object containing API keys 
 
-    Parameters:
-    config (Config): Configuration object containing API keys 
+Yields:
+List[Dict]: List of news articles as dictionaries
+"""
+async with aiohttp.ClientSession() as session:
+    crypto_compare_news = await get_crypto_compare_news(session, config.crypto_compare_api_key, timeout=10)
+    yield crypto_compare_news 
 
-    Returns:
-    List[Dict]: List of news articles as dictionaries
-    """
-    async with aiohttp.ClientSession() as session:
-        crypto_compare_news = await get_crypto_compare_news(session, config.crypto_compare_api_key)
-        all_news = crypto_compare_news
-        return all_news 
+async def post_news(bot: telegram.Bot, channel_id: str, news_data: List[Dict], posted_articles: Set[str], timeout: int) -> Set[str]: """ Post news articles to Telegram channel asynchronously. 
 
-async def post_news(bot: telegram.Bot, channel_id: str, news_data: List[Dict], posted_articles: Set[str]) -> Set[str]:
-    """
-    Post news articles to Telegram channel asynchronously. 
+Parameters:
+bot (telegram.Bot): Telegram bot instance
+channel_id (str): Telegram channel id
+news_data (List[Dict]): List of news articles
+posted_articles (Set[str]): Set of already posted article ids 
+timeout (int): Timeout for the request in seconds 
 
-    Parameters:
-    bot (telegram.Bot): Telegram bot instance
-    channel_id (str): Telegram channel id
-    news_data (List[Dict]): List of news articles
-    posted_articles (Set[str]): Set of already posted article ids 
-
-    Returns:
-    Set[str]: Updated set of posted article ids
-    """
-    new_posted_articles = set() 
-
+Returns:
+Set[str]: Updated set of posted article ids
+"""
+new_posted_articles = set() 
+async with aiohttp.ClientSession() as session:
     for article in news_data:
         article_id = article['id']
         if article_id not in posted_articles:
@@ -149,65 +149,60 @@ async def post_news(bot: telegram.Bot, channel_id: str, news_data: List[Dict], p
             message = f'<b>{title}</b>\n{description}\n<a href="{url}">Read more</a>' 
 
             try:
-                await bot.send_message(chat_id=channel_id, text=message, parse_mode=telegram.ParseMode.HTML)
+                await bot.send_message(chat_id=channel_id, text=message, parse_mode=telegram.ParseMode.HTML, timeout=timeout)
                 new_posted_articles.add(article_id)
             except telegram.TelegramError as telegram_error:
-                logging.error(f'Telegram error occurred while posting article: {telegram_error}')
+                logging.exception(f'Telegram error occurred while posting article: {telegram_error}')
             except Exception as error:
-                logging.error(f'Error occurred while posting article: {error}')
+                logging.exception(f'Error occurred while posting article: {error}')
             await asyncio.sleep(1) 
 
-    return posted_articles | new_posted_articles
+return posted_articles | new_posted_articles 
 
+async def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interval: int, timeout: int): """ Schedule news articles posting at regular intervals using asynchronous requests. 
 
-async def schedule_posting(bot: telegram.Bot, channel_id: str, config: Config, interval: int):
-    """
-    Schedule news articles posting at regular intervals using asynchronous requests. 
+Parameters:
+bot (telegram.Bot): Telegram bot instance
+channel_id (str): Telegram channel id
+config (Config): Configuration object containing API keys
+interval (int): Interval between posting news articles in seconds
+timeout (int): Timeout for the request in seconds
+"""
+posted_articles = set() 
+message_queue = asyncio.Queue() 
 
-    Parameters:
-    bot (telegram.Bot): Telegram bot instance
-    channel_id (str): Telegram channel id
-    config (Config): Configuration object containing API keys
-    interval (int): Interval between posting news articles in seconds
-    """
-    posted_articles = set() 
-
-    async def job():
-        nonlocal posted_articles
-        try:
-            news_data = await get_all_news(config)
-            posted_articles = await post_news(bot, channel_id, news_data, posted_articles)
-        except Exception as error:
-            logging.error(f'Error occurred while running job: {error}') 
-
-    # Run the job immediately on startup
-    await job() 
-
-    # Schedule the job to run at regular intervals
-    while True:
-        try:
-            await asyncio.sleep(interval)
-            await job()
-        except Exception as error:
-            logging.error(f'Error occurred while running job: {error}') 
-
-async def main():
-    """
-    Main function that runs the script asynchronously
-    """
+async def job():
+    nonlocal posted_articles
     try:
-        config = Config()
-        # 4. Change the `validate` method to raise an exception if there is an error
-        config.validate() 
-
-        bot = telegram.Bot(token=config.telegram_bot_token)
-        await schedule_posting(bot, config.telegram_channel_id, config, 3600)
-    except ConfigurationError as error:
-        # 5. Properly handle the `ConfigurationError` exception
-        logging.error(str(error))
+        async for news_data in get_all_news(config):
+            await message_queue.put(news_data)
     except Exception as error:
-        logging.error(f'Unhandled exception occurred: {error}')
+        logging.exception(f'Error occurred while running job: {error}') 
 
+async def send_messages():
+    while True:
+        news_data = await message_queue.get()
+        posted_articles = await post_news(bot, channel_id, news_data, posted_articles, timeout)
+        message_queue.task_done() 
 
-if __name__ == '__main__':
-    asyncio.run(main())
+# Run the job immediately on startup
+await job() 
+
+# Schedule the job to run at regular intervals
+while True:
+    try:
+        await asyncio.sleep(interval)
+        asyncio.create_task(job())
+    except Exception as error:
+        logging.exception(f'Error occurred while running job: {error}') 
+
+async def main(): """ Main function that runs the script asynchronously """ try: config =Config() config.validate() 
+
+    bot = telegram.Bot(token=config.telegram_bot_token)
+    await schedule_posting(bot, config.telegram_channel_id, config, interval=3600, timeout=10)
+except ConfigurationError as error:
+    logging.exception(str(error))
+except Exception as error:
+    logging.exception(f'Unhandled exception occurred: {error}') 
+
+if name == 'main': asyncio.run(main())
