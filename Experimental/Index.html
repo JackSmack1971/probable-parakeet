@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Wallet</title>
+    <style>
+        /* Add any custom CSS styles you want */
+    </style>
+</head>
+<body>
+    <h1>Token Wallet</h1>
+
+    <!-- User registration container -->
+    <div id="user-registration-container">
+        <h2>Register User:</h2>
+        <form id="register-user-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+            <br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email">
+            <br>
+            <button type="submit">Register</button>
+        </form>
+    </div>
+
+    <!-- Token mining container -->
+    <div id="token-mining-container">
+        <h2>Mine Tokens:</h2>
+        <form id="mine-tokens-form">
+            <label for="email-for-mining">Email:</label>
+            <input type="email" id="email-for-mining" name="email">
+            <br>
+            <label for="proof">Proof:</label>
+            <input type="number" id="proof" name="proof">
+            <br>
+            <button type="submit">Mine Tokens</button>
+        </form>
+    </div>
+
+    <!-- News container -->
+    <div id="news-container">
+        <h2>News:</h2>
+        <button id="fetch-news-btn">Fetch News</button>
+        <ul id="news-list"></ul>
+    </div>
+
+    <!-- Mining data analysis container -->
+    <div id="mining-data-container">
+        <h2>Mining Data:</h2>
+        <button id="fetch-mining-data-btn">Fetch Mining Data</button>
+        <pre id="mining-data"></pre>
+    </div>
+
+    <script>
+        // Add the custom JavaScript code for handling form submissions and button click events
+    </script>
+</body>
+</html>
+ // Register a new user
+function registerUser(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+
+    fetch("/register", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+        });
+}
+
+// Add an event listener for the user registration form
+const registerUserForm = document.getElementById("register-user-form");
+registerUserForm.addEventListener("submit", registerUser);
+// Mine tokens for a user
+function mineTokens(event) {
+    event.preventDefault();
+
+    const email = document.getElementById("email-for-mining").value;
+    const proof = document.getElementById("proof").value;
+
+    fetch("/mine", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, proof }),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            console.log(data);
+        });
+}
+
+// Add an event listener for the token mining form
+const mineTokensForm = document.getElementById("mine-tokens-form");
+mineTokensForm.addEventListener("submit", mineTokens);
+// Fetch news and display it in the UI
+function fetchNews() {
+    fetch("/news")
+        .then((response) => response.json())
+        .then((data) => {
+            const newsList = document.getElementById("news-list");
+            newsList.innerHTML = "";
+
+            for (const newsItem of data.articles) {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${newsItem.title} - ${newsItem.source.name}`;
+                newsList.appendChild(listItem);
+            }
+        });
+}
+
+// Add an event listener for the Fetch News button
+const fetchNewsBtn = document.getElementById("fetch-news-btn");
+fetchNewsBtn.addEventListener("click", fetchNews);
+// Fetch mining data and display it in the UI
+function fetchMiningData() {
+    fetch("/mining-data")
+        .then((response) => response.json())
+        .then((data) => {
+            const miningData = document.getElementById("mining-data");
+            miningData.textContent = JSON.stringify(data, null, 2);
+        });
+}
+
+// Add an event listener for the Fetch Mining Data button
+const fetchMiningDataBtn = document.getElementById("fetch-mining-data-btn");
+fetchMiningDataBtn.addEventListener("click", fetchMiningData);
+<!-- Proof of Work container -->
+<div id="proof-of-work-container">
+    <h2>Proof of Work:</h2>
+    <p>Last Proof: <span id="last-proof"></span></p>
+    <p>Next Proof: <span id="next-proof"></span></p>
+    <button id="fetch-proof-btn">Fetch Proof</button>
+</div>
+// Fetch the last proof and display it in the UI
+function fetchProof() {
+    fetch("/last-proof")
+        .then((response) => response.json())
+        .then((last_proof) => {
+            const lastProofElement = document.getElementById("last-proof");
+            const nextProofElement = document.getElementById("next-proof");
+            lastProofElement.textContent = last_proof;
+            nextProofElement.textContent = "Find a number that, when combined with " + last_proof + ", results in a hash with a set number of leading zeros.";
+        });
+}
+
+// Add an event listener for the Fetch Proof button
+const fetchProofBtn = document.getElementById("fetch-proof-btn");
+fetchProofBtn.addEventListener("click", fetchProof);
+nextProofElement.textContent = `Find a number that, when combined with ${last_proof}, results in a hash lower than the target value (hash with ${MINING_DIFFICULTY} leading zeros).`;
+// Fetch the news and display it in the UI
+function fetchNews() {
+    fetch("/fetch-news")
+        .then((response) => response.json())
+        .then((news_data) => {
+            const newsListElement = document.getElementById("news-list");
+            newsListElement.innerHTML = "";
+
+            news_data.articles.forEach((article) => {
+                const listItem = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = article.url;
+                link.textContent = article.title;
+                link.target = "_blank";
+                listItem.appendChild(link);
+                newsListElement.appendChild(listItem);
+            });
+        });
+}
+
+<!-- News container -->
+<div id="news-container">
+    <h2>Top News:</h2>
+    <ul id="news-list"></ul>
+    <button id="fetch-news-btn">Fetch News</button>
+</div>
+// Fetch the news and display it in the UI
+function fetchNews() {
+    fetch("/fetch-news")
+        .then((response) => response.json())
+        .then((news_data) => {
+            const newsListElement = document.getElementById("news-list");
+            newsListElement.innerHTML = "";
+
+            news_data.articles.forEach((article) => {
+                const listItem = document.createElement("li");
+                const link = document.createElement("a");
+                link.href = article.url;
+                link.textContent = article.title;
+                link.target = "_blank";
+                
+                // Add source channel information
+                const source = document.createElement("span");
+                source.textContent = ` (${article.source.name})`;
+                source.style.fontSize = "0.8em";
+                source.style.color = "#999";
+                
+                listItem.appendChild(link);
+                listItem.appendChild(source);
+                newsListElement.appendChild(listItem);
+            });
+        });
+}
+
+// Add an event listener for the Fetch News button
+const fetchNewsBtn = document.getElementById("fetch-news-btn");
+fetchNewsBtn.addEventListener("click", fetchNews);
+<!-- News container -->
+<div id="news-container">
+    <h2>Top News:</h2>
+    <ul id="news-list"></ul>
+    <button id="fetch-news-btn">Fetch News</button>
+</div>
