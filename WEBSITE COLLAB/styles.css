@@ -1,0 +1,87 @@
+/* General styles */
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+} 
+
+h1,
+h2 {
+    color: #333;
+} 
+
+.container {
+    max-width: 1170px;
+    margin: 0 auto;
+    padding: 30px;
+} 
+
+/* Registration container */
+#user-registration-container,
+#token-mining-container,
+#news-container,
+#mining-data-container,
+#proof-of-work-container {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+} 
+
+form {
+    display: flex;
+    flex-direction: column;
+} 
+
+label,
+input {
+    margin-bottom: 10px;
+} 
+
+input,
+button {
+    height: 40px;
+} 
+
+button {
+    background-color: #333;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    border: none;
+    width: 50%;
+    margin: 0 auto;
+} 
+
+button:hover {
+    background-color: #555;
+} 
+
+/* News container */
+.news-item {
+    margin-bottom: 10px;
+} 
+
+.news-title {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 5px;
+} 
+
+.news-source {
+    font-size: 14px;
+    color: #999;
+} 
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    } 
+
+    button {
+        width: 100%;
+    }
+}
