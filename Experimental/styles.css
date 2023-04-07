@@ -1,0 +1,119 @@
+/* Global styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-weight: bold;
+    margin: 0;
+}
+
+a {
+    color: #0077cc;
+}
+
+/* Container styles */
+.container {
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Form styles */
+.form-group {
+    margin-bottom: 10px;
+}
+
+label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+input[type="text"], input[type="email"], input[type="number"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+button[type="submit"], button {
+    background-color: #0077cc;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+button[type="submit"]:hover, button:hover {
+    background-color: #005ea5;
+}
+
+/* News container styles */
+#news-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+#news-list li {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.news-thumbnail {
+    width: 100px;
+    height: 100px;
+    margin-right: 20px;
+}
+
+.news-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.news-summary {
+    flex: 1;
+}
+
+.news-title {
+    font-size: 18px;
+    margin: 0;
+}
+
+.news-source {
+    font-size: 14px;
+    color: #999;
+}
+
+/* Proof of Work container styles */
+#proof-of-work-container p {
+    margin: 10px 0;
+}
+
+#last-proof, #next-proof {
+    font-weight: normal;
+    font-size: 18px;
+}
+
+#next-proof:before {
+    content: "Find a number that, when combined with ";
+}
+
+/* Footer styles */
+footer {
+    background-color: #fff;
+    padding: 20px;
+    margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
+    color: #999;
+}
