@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Wallet</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Token Wallet</h1> 
+
+    <!-- User registration container -->
+    <div id="user-registration-container">
+        <h2>Register User:</h2>
+        <form id="register-user-form">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name">
+            <br>
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email">
+            <br>
+            <button type="submit">Register</button>
+        </form>
+    </div> 
+
+    <!-- Token mining container -->
+    <div id="token-mining-container">
+        <h2>Mine Tokens:</h2>
+        <form id="mine-tokens-form">
+            <label for="email-for-mining">Email:</label>
+            <input type="email" id="email-for-mining" name="email">
+            <br>
+            <label for="proof">Proof:</label>
+            <input type="number" id="proof" name="proof">
+            <br>
+            <button type="submit">Mine Tokens</button>
+        </form>
+    </div> 
+
+    <!-- News container -->
+    <div id="news-container">
+        <h2>Top News:</h2>
+        <ul id="news-list"></ul>
+        <button id="fetch-news-btn">Fetch News</button>
+    </div> 
+
+    <!-- Mining data analysis container -->
+    <div id="mining-data-container">
+        <h2>Mining Data:</h2>
+        <button id="fetch-mining-data-btn">Fetch Mining Data</button>
+        <pre id="mining-data"></pre>
+    </div> 
+
+    <script src="validation.js"></script>
+    <script src="api.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
