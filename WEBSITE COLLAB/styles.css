@@ -1,22 +1,22 @@
 /* General styles */
 body {
-    font-family: 'Arial', sans-serif;
-    line-height: 1.6;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-} 
+    font-family: 'Helvetica Neue', sans-serif;
+    line-height: 1.8;
+    margin: 0;
+    padding: 0;
+    background-color: #111;
+}
 
 h1,
 h2 {
-    color: #333;
-} 
+    color: #fff;
+}
 
 .container {
-    max-width: 1170px;
-    margin: 0 auto;
-    padding: 30px;
-} 
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 50px;
+}
 
 /* Registration container */
 #user-registration-container,
@@ -24,64 +24,79 @@ h2 {
 #news-container,
 #mining-data-container,
 #proof-of-work-container {
-    background-color: #fff;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-} 
+    background-color: #333;
+    padding: 30px;
+    margin-bottom: 50px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
 
 form {
-    display: flex;
-    flex-direction: column;
-} 
+    display: flex;
+    flex-direction: column;
+}
 
 label,
 input {
-    margin-bottom: 10px;
-} 
+    margin-bottom: 20px;
+}
 
 input,
 button {
-    height: 40px;
-} 
+    height: 60px;
+    font-size: 24px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}
+
+input {
+    padding: 20px;
+    background-color: #fff;
+    color: #333;
+}
 
 button {
-    background-color: #333;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    width: 50%;
-    margin: 0 auto;
-} 
+    padding: 0 30px;
+    background-color: #f00;
+    color: #fff;
+    cursor: pointer;
+    width: 50%;
+    margin: 0 auto;
+}
 
 button:hover {
-    background-color: #555;
-} 
+    background-color: #ff3d3d;
+}
 
 /* News container */
 .news-item {
-    margin-bottom: 10px;
-} 
+    margin-bottom: 30px;
+}
 
 .news-title {
-    font-size: 18px;
-    color: #333;
-    margin-bottom: 5px;
-} 
+    font-size: 36px;
+    color: #fff;
+    margin-bottom: 10px;
+}
 
 .news-source {
-    font-size: 14px;
-    color: #999;
-} 
+    font-size: 18px;
+    color: #999;
+}
 
 /* Responsive styles */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
-    } 
+    .container {
+        padding: 30px;
+    }
 
-    button {
-        width: 100%;
-    }
+    input,
+button {
+        height: 50px;
+        font-size: 20px;
+    }
+
+    button {
+        width: 100%;
+    }
 }
