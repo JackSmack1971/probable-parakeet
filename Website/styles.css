@@ -1,0 +1,83 @@
+/* styles.css */ 
+
+/* Responsive Typography */
+html {
+  font-size: 100%; /* 16px */
+}
+/* Responsive design for mobile devices */ @media screen and (max-width: 767px) { .gallery { grid-template-columns: repeat(2, 1fr); gap: 1rem; } } 
+
+@media (min-width: 1200px) {
+  html {
+    font-size: 125%; /* 20px */
+  }
+} 
+
+nav ul li a {
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+    padding: 0.25rem;
+    transition: all 0.3s ease-in-out;
+} 
+
+nav ul li a:hover,
+nav ul li a:focus {
+    color: #0077cc;
+    background-color: #f4f4f4;
+    border-radius: 4px;
+} 
+
+html {
+    scroll-behavior: smooth;
+} 
+
+.gallery-controls select,
+.gallery-controls input {
+    margin: 0 0.5rem;
+    padding: 0.25rem 0.5rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+} 
+
+.gallery-controls select:focus,
+.gallery-controls input:focus {
+    border-color: #0077cc;
+    box-shadow: 0 0 0 3px rgba(0, 119, 204, 0.3);
+} 
+
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background-color: #000;
+    color: #fff;
+    padding: 8px;
+    z-index: 100;
+    transition: top 0.3s;
+} 
+
+.skip-link:focus {
+    top: 0;
+}
+.gallery article { cursor: pointer; transition: transform 0.3s; } .gallery article:hover { transform: scale(1.05); } 
+
+.gallery::before {
+    content: 'Loading...';
+    display: block;
+    text-align: center;
+    padding: 2rem;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
