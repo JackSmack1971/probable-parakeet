@@ -19,17 +19,14 @@ eth-abi
 eth-utils
 You can install the dependencies using the following command:
 
-Copy code
 pip install web3 eth-account eth-abi eth-utils
+
 Setup
 Clone this repository:
-bash
-Copy code
-git clone https://github.com/yourusername/ethereum-frontrunning-bot
+git clone https://github.com/JackSmack1971/probable-parakeet/tree/main/FlashbotV3
 Navigate to the repository folder:
-bash
-Copy code
-cd ethereum-frontrunning-bot
+
+cd /JackSmack1971/probable-parakeet/tree/main/FlashbotV3
 Open frontrunning_bot.py in your favorite text editor.
 
 Replace <INFURA_PROJECT_ID> with your Infura project ID.
