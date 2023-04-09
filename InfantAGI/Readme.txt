@@ -28,7 +28,7 @@ Pinecone is used to store and retrieve task results, maintaining context. The sc
 Usage
 To use InfantAGI, follow these steps:
 
-Clone the repository: git clone https://github.com/yoheinakajima/infantagi.git and cd into the cloned directory.
+Clone the repository and cd into the cloned directory.
 Install the required packages: pip install -r requirements.txt
 Copy the .env.example file to .env: cp .env.example .env. Set the necessary variables in the .env file.
 Configure the following variables in the .env file:
