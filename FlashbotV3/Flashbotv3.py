@@ -1,7 +1,7 @@
 import logging
 import time
 from web3 import Web3
-from eth_account import Account 
+from eth_account import Account
 from web3.exceptions import BadFunctionCallOutput
 from eth_abi import encode_single, encode_abi
 from eth_utils import to_checksum_address 
@@ -15,8 +15,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(mess
 infura_url = 'https://mainnet.infura.io/v3/<INFURA_PROJECT_ID>' 
 
 # Define the contract ABI and address
-ABI = [...] # ERC20 contract ABI
-CONTRACT_ADDRESS = '0x...' # ERC20 contract address 
+ABI = [...]  # ERC20 contract ABI
+CONTRACT_ADDRESS = '0x...'  # ERC20 contract address 
 
 # Define the event signature for the Transfer event
 EVENT_SIGNATURE = Web3.keccak(text='Transfer(address,address,uint256)').hex() 
@@ -29,7 +29,8 @@ latest_block = w3.eth.blockNumber
 logging.info('Connected to Ethereum node synced with latest block: %s', latest_block) 
 
 # Load the contract using Web3.py
-contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI) 
+contract = w3.eth.contract(address=CONTRACT_ADDRESS, abi=ABI)
+
 
 # Define the gas price strategy
 def calculate_gas_price(w3, tx):
@@ -83,8 +84,7 @@ def calculate_gas_price(w3, tx):
     # If we have not found a profitable transaction, raise an exception
     raise ValueError('Unable to find a profitable transaction') 
 
-# Define a helper function to calculate the expected profit for a given gas price
-def calculate_expected_profit(w3, tx, gas_price, pending_gas_limit 
+#Define a helper function to calculate the expected profit for a given gas price 
 
 def calculate_expected_profit(w3, tx, gas_price, pending_gas_limit): # Calculate the maximum amount that can be earned from the transaction max_profit = tx.value - gas_price * pending_gas_limit 
 
@@ -140,18 +140,6 @@ def broadcast_tx(w3, new_tx): # Broadcast the transaction to the network tx_hash
 
 logging.info('Broadcasting transaction: %s', tx_hash.hex()) 
 
-#Define the unit tests 
-
-def test_calculate_gas_price(): # TODO: Write unit tests for the calculate_gas_price function pass 
-
-def test_create_new_tx(): # TODO: Write unit tests for the create_new_tx function pass 
-
-def test_broadcast_tx(): # TODO: Write unit tests for the broadcast_tx function pass 
-
-#Run the unit tests 
-
-test_calculate_gas_price() test_create_new_tx() test_broadcast_tx() 
-
 #Define the main function 
 
 def frontrun(): # Connect to Infura's Ethereum node w3 = Web3(Web3.HTTPProvider(infura_url)) 
@@ -178,25 +166,27 @@ for event in event_filter.get_new_entries():
         pending_gas_limit = w3.eth.getBlock('pending')['gasLimit']
     except Exception:
         # Set a default value if we are unable to fetch the pending block gas limit
-        pending_gas_limit = 12_000_000  # 12 million gas 
+        pending_gas_limit = 12_000_000  # 12 million 
 
     try:
-        gas_price = calculate_gas_price(w3, tx, pending_gas_limit)
+        gas_price = calculate_gas_price(w3, tx)
     except ValueError as e:
-        logging.warning(f"{e} for transaction {tx.hash.hex()}")
+        logging.warning('Unable to find a profitable transaction: %s', e)
         continue 
 
-    # Create a new transaction with the desired gas price and nonce
-    new_tx = create_new_tx(w3, tx, gas_price) 
+    # Create a new transaction with the optimal gas price
+    try:
+        new_tx = create_new_tx(w3, tx, gas_price)
+    except Exception as e:
+        logging.warning('Error creating new transaction: %s', e)
+        continue 
 
-    # Broadcast the transaction to the network
-    broadcast_tx(w3, new_tx) 
+    # Broadcast the new transaction to the network
+    try:
+        broadcast_tx(w3, new_tx)
+    except Exception as e:
+        logging.warning('Error broadcasting transaction: %s', e)
+        continue 
 
-    # Wait for the transaction to be mined and print the status
-    receipt = w3.eth.wait_for_transaction_receipt(new_tx.hash, timeout=60)
-    if receipt['status'] == 1:
-        logging.info('Transaction succeeded: %s', new_tx.hash.hex())
-    else:
-        logging.warning('Transaction failed: %s', new_tx.hash.hex()) 
+if name == 'main': frontrun()
 
-if name == 'main': try: # Run the frontrunning function frontrun() except Exception as e: logging.error('An error occurred: %s', str(e))
