@@ -1,50 +1,62 @@
+#monitor.py v1.1.0 
+
 #!/usr/bin/env python3
 import sys
 import time
 import curses
-from pathlib import Path
+from pathlib import Path 
 
 # Add the parent directory to the system path to import extensions
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from extensions.ray_objectives import CooperativeObjectivesListStorage
-from extensions.ray_tasks import CooperativeTaskListStorage
+from extensions.ray_tasks import CooperativeTaskListStorage 
 
+SLEEP_TIME = 30 
 
 def print_buffer(stdscr, lines):
-    """
-    Clear the screen and print the provided lines.
-    """
-    stdscr.clear()
-    for index, line in enumerate(lines):
-        stdscr.addstr(index, 0, line)
-    stdscr.refresh()
+    """
+    Clear the screen and print the provided lines. 
+
+    Args:
+        stdscr (curses window): The curses window to print lines on.
+        lines (list): A list of lines to print on the screen.
+    """
+    stdscr.clear()
+    for index, line in enumerate(lines):
+        stdscr.addstr(index, 0, line)
+    stdscr.refresh()
 
 
 def main(stdscr):
-    objectives = CooperativeObjectivesListStorage()
+    """
+    Main function to monitor and display the objectives and their tasks. 
 
-    while True:
-        objectives_list = objectives.get_objective_names()
-        buffer = []
+    Args:
+        stdscr (curses window): The curses window to display the output.
+    """
+    objectives = CooperativeObjectivesListStorage() 
 
-        if not objectives_list:
-            buffer.append("No objectives")
+    while True:
+        objectives_list = objectives.get_objective_names()
+        buffer = [] 
 
-        for objective in objectives_list:
-            buffer.append("-----------------")
-            buffer.append(f"Objective: {objective}")
-            buffer.append("-----------------")
-            tasks = CooperativeTaskListStorage(objective)
-            tasks_list = tasks.get_task_names()
-            buffer.append("Tasks:")
+        if not objectives_list:
+            buffer.append("No objectives") 
 
-            for task in tasks_list:
-                buffer.append(f" * {task}")
+        for objective in objectives_list:
+            buffer.append("-----------------")
+            buffer.append(f"Objective: {objective}")
+            buffer.append("-----------------")
+            tasks = CooperativeTaskListStorage(objective)
+            tasks_list = tasks.get_task_names()
+            buffer.append("Tasks:") 
 
-            buffer.append("-----------------")
+            for task in tasks_list:
+                buffer.append(f" * {task}") 
 
-        print_buffer(stdscr, buffer)
-        time.sleep(30)
+            buffer.append("-----------------") 
 
+        print_buffer(stdscr, buffer)
+        time.sleep(SLEEP_TIME) 
 
 curses.wrapper(main)
