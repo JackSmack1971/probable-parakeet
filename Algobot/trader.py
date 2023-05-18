@@ -98,8 +98,7 @@ def place_order(symbol, side, quantity):
         symbol=symbol,
         side=side,
         type=Client.ORDER_TYPE_MARKET,
-        quantity=quantity
-    ) 
+        quantity=quantity) 
 
     # Check if the order is partially filled
     if order['status'] == Client.ORDER_STATUS_PARTIALLY_FILLED:
