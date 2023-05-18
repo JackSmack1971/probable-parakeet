@@ -72,9 +72,8 @@ def should_buy(data):
 def should_sell(data):
     """Determine whether to sell based on the current data."""
     for df in data.values():
-        if df['macd'].iloc[-1] >= 0Apologies for the abrupt cut-off. Here's the continuation and completion of the improved script: 
+        if df['macd'].iloc[-1] >= 0
 
-```python
         if df['macd'].iloc[-1] >= 0 or df['ema'].iloc[-1] >= df['close'].iloc[-1] or df['rsi'].iloc[-1] <= 70:
             return False
     return True 
