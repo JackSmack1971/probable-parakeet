@@ -17,7 +17,8 @@ RETRY_DELAY = 5
 RSI_BUY_THRESHOLD = 30
 RSI_SELL_THRESHOLD = 70
 ASSET = 'USDT'
-MONGO_CONNECTION_STRING = 'mongodb://localhost:27017/'
+MONGO_CONNECTION_STRING = os.getenv('MONGO_CONNECTION_STRING', 'mongodb://localhost:27017/')
+SYMBOL = os.getenv('SYMBOL', 'BTCUSDT')
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -79,9 +80,7 @@ def should_buy(data: dict) -> bool:
     """Determine whether to buy based on the current data."""
     for df in data.values():
         if df['macd'].iloc[-1] <= 0 or df['ema'].iloc[-1] <= df['close'].iloc[-1] or df['rsi'].iloc[-1] >= RSI_BUY_THRESHOLD:
-            return FalseI'm sorry for the abrupt cut-off in the previous message. Here's the continuation of the code:
-
-```python
+            return False
     return True
 
 def should_sell(data: dict) -> bool:
@@ -124,37 +123,38 @@ def place_order(symbol: str, side: str, quantity: float) -> float:
         return 0
 
 def main():
-    symbol = os.getenv('SYMBOL', 'BTCUSDT')
-    high_volume_periods = get_high_volume_periods(symbol, INTERVALS[0])
+    high_volume_periods = get_high_volume_periods(SYMBOL, INTERVALS[0])
 
     while True:
-        data = get_data(symbol, INTERVALS)
+        data = get_data(SYMBOL, INTERVALS)
 
         if data is not None:
             # Only trade during high volume periods
             if data[INTERVALS[0]]['time'].iloc[-1] in high_volume_periods.values:
                 if should_buy(data):
-                    quantity = get_optimal_quantity(symbol)
-                    remaining_quantity = place_order(symbol, Client.SIDE_BUY, quantity)
+                    quantity = get_optimal_quantity(SYMBOL)
+                    remaining_quantity = place_order(SYMBOL, Client.SIDE_BUY, quantity)
                     while remaining_quantity > 0:
-                        remaining_quantity = place_order(symbol, Client.SIDE_BUY, remaining_quantity)
+                        remaining_quantity = place_order(SYMBOL, Client.SIDE_BUY, remaining_quantity)
                 elif should_sell(data):
-                    quantity = get_optimal_quantity(symbol)
-                    remaining_quantity = place_order(symbol, Client.SIDE_SELL, quantity)
+                    quantity = get_optimal_quantity(SYMBOL)
+                                        remaining_quantity = place_order(SYMBOL, Client.SIDE_SELL, quantity)
                     while remaining_quantity > 0:
-                        remaining_quantity = place_order(symbol, Client.SIDE_SELL, remaining_quantity)
+                        remaining_quantity = place_order(SYMBOL, Client.SIDE_SELL, remaining_quantity)
 
             # Store data in MongoDB
-            db[symbol].insert_one(data[INTERVALS[0]].to_dict())
+            db[SYMBOL].insert_one(data[INTERVALS[0]].to_dict())
 
-            # Plot closing prices
+            # Plot closing prices and indicators
             plt.figure(figsize=(14, 7))
             sns.lineplot(data=data[INTERVALS[0]], x='time', y='close')
-            plt.title(f'Closing Prices of {symbol} Over Time')
+            sns.lineplot(data=data[INTERVALS[0]], x='time', y='macd')
+            sns.lineplot(data=data[INTERVALS[0]], x='time', y='ema')
+            sns.lineplot(data=data[INTERVALS[0]], x='time', y='rsi')
+            plt.title(f'Closing Prices and Indicators of {SYMBOL} Over Time')
             plt.show()
         else:
             break  # Exit the loop if there's an error getting data
 
 if __name__ == "__main__":
     main()
-
