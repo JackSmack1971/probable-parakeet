@@ -1,0 +1,33 @@
+{
+  "name": "synergix",
+  "version": "1.0.0",
+  "description": "SynergiX smart contracts: ERC20 token and staking contract with referral system.",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/SynergixDeployment.js --network rinkeby",
+    "deploy:mainnet": "hardhat run scripts/SynergixDeployment.js --network mainnet",
+    "upgrade": "hardhat run scripts/UpgradeSynergixContracts.js --network rinkeby"
+  },
+  "keywords": [
+    "ethereum",
+    "smart contracts",
+    "staking",
+    "erc20",
+    "synergix"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.2",
+    "@openzeppelin/contracts": "^4.8.4",
+    "@openzeppelin/contracts-upgradeable": "^4.8.4",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.12.6",
+    "mocha": "^10.2.0"
+  }
+}
