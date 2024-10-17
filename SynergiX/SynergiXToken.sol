@@ -41,65 +41,14 @@ contract SynergiXToken is Initializable, ERC20Burnable, AccessControl, UUPSUpgra
     uint32 public constant MIN_STAKING_DAYS = 1;
     uint32 public constant MAX_STAKING_DAYS = 365;
 
-    // Pools
-    uint256 public penaltyPool;
-    uint256 public rewardPool;
-
-    // Reward Parameters
-    uint256 private _currentRewardPercentage;
-    uint256 private _rewardHalvingBlock;
-    uint256 private _lowStakeRewardPercentage;
-    uint256 private _mediumStakeRewardPercentage;
-    uint256 private _highStakeRewardPercentage;
-    uint256 private _lockupPeriod;
-    uint256 private _lastRewardDistribution;
-
-    // Thresholds
-    uint256 private constant LOW_STAKE_THRESHOLD = 100 ether;
-    uint256 private constant MEDIUM_STAKE_THRESHOLD = 1000 ether;
-    uint256 private constant BLOCKS_PER_REWARD_HALVING = 210000; // Halve the reward every 210,000 blocks
-
-    // Reward Pool Fractions
-    uint256 private constant REWARD_POOL_FRACTION = 10; // 10%
-    uint256 private constant PENALTY_POOL_FRACTION = 10; // 10%
-
-    // Reward Pool Percentage
-    uint256 private _rewardPoolPercentage;
-
-    /// @notice Stake Structure
-    struct Stake {
-        uint256 value;
-        uint256 startDay;
-        uint256 endDay;
-        uint256 gracePeriodEnd;
-        uint256 reward;
-    }
-
-    // Mapping of Stakes per Address
-    mapping(address => Stake[]) private _stakes;
-
     // Events
-    event StakeStarted(
-        address indexed staker,
-        uint256 stakeValue,
-        uint256 stakeDays,
-        uint256 indexed stakeIndex,
-        address indexed stakingContract
-    );
-    event StakeEnded(
-        address indexed staker,
-        uint256 indexed stakeIndex,
-        uint256 penalty,
-        uint256 reward,
-        address indexed stakingContract
-    );
     event RewardPoolUpdated(uint256 newRewardPool);
     event PenaltyPoolUpdated(uint256 newPenaltyPool);
     event RewardPoolPercentageUpdated(uint256 newRewardPoolPercentage);
     event TrustedContractAdded(address indexed contractAddress);
     event TrustedContractRemoved(address indexed contractAddress);
 
-    /// @notice Initializes the contract with the given parameters
+    /// @notice Initializes the token contract
     /// @param admin The address to be granted the ADMIN_ROLE
     /// @param _staking The address of the staking contract
     function initialize(address admin, ISynergiXStaking _staking) public initializer {
@@ -115,47 +64,25 @@ contract SynergiXToken is Initializable, ERC20Burnable, AccessControl, UUPSUpgra
         _setupRole(ADMIN_ROLE, admin);
         _setupRole(DEFAULT_ADMIN_ROLE, admin);
         _setupRole(TRUSTED_CONTRACT_ROLE, address(_staking));
+        _setupRole(STAKING_ROLE, address(_staking));
 
         // Initialize Variables
         staking = _staking;
         _paused = false;
-
-        penaltyPool = 0;
-        rewardPool = 0;
-        _currentRewardPercentage = 100;
-        _rewardHalvingBlock = block.number;
-        _lowStakeRewardPercentage = 50;
-        _mediumStakeRewardPercentage = 75;
-        _highStakeRewardPercentage = 100;
-        _lockupPeriod = 30 days;
-        _lastRewardDistribution = block.timestamp;
-        _rewardPoolPercentage = 100;
     }
 
     /// @notice Authorizes contract upgrades, restricted to ADMIN_ROLE
     /// @param newImplementation The address of the new implementation
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(ADMIN_ROLE) {}
 
-    /// @notice Calculates the reward based on the stake value
-    /// @param stakeValue The value of the stake
-    /// @return reward The calculated reward
-    function calculateReward(uint256 stakeValue) public view returns (uint256 reward) {
-        uint256 rewardPercentage;
-
-        if (stakeValue < LOW_STAKE_THRESHOLD) {
-            rewardPercentage = _lowStakeRewardPercentage;
-        } else if (stakeValue < MEDIUM_STAKE_THRESHOLD) {
-            rewardPercentage = _mediumStakeRewardPercentage;
-        } else {
-            rewardPercentage = _highStakeRewardPercentage;
-        }
-
-        rewardPercentage = (rewardPercentage * _rewardPoolPercentage) / 100;
-
-        reward = (stakeValue * rewardPercentage) / 100;
+    /// @notice Mint function restricted to STAKING_ROLE
+    /// @param to The address to mint tokens to
+    /// @param amount The amount of tokens to mint
+    function mint(address to, uint256 amount) external onlyRole(STAKING_ROLE) {
+        _mint(to, amount);
     }
 
-    /// @notice Starts a new stake
+    /// @notice Starts a new stake by delegating to the staking contract
     /// @param stakeValue The amount to stake
     /// @param stakeDays The duration of the stake in days
     function stake(uint256 stakeValue, uint256 stakeDays) external nonReentrant {
@@ -168,37 +95,19 @@ contract SynergiXToken is Initializable, ERC20Burnable, AccessControl, UUPSUpgra
         // Ensure the staking contract has the STAKING_ROLE
         require(hasRole(STAKING_ROLE, address(staking)), "Staking contract lacks STAKING_ROLE");
 
-        // User must approve the staking contract to spend their tokens
-        // The staking contract will handle the transfer
+        // Delegate the staking process to the staking contract
         uint256 stakeIndex = staking.stakeStart(stakeValue, stakeDays, msg.sender);
-
-        Stake memory newStake = Stake({
-            value: stakeValue,
-            startDay: block.timestamp,
-            endDay: block.timestamp + (stakeDays * SECONDS_IN_DAY),
-            gracePeriodEnd: 0, // Define as needed
-            reward: 0 // Initialize as needed
-        });
-
-        _stakes[msg.sender].push(newStake);
 
         emit StakeStarted(msg.sender, stakeValue, stakeDays, stakeIndex, address(staking));
     }
 
-    /// @notice Ends an active stake and claims rewards
+    /// @notice Ends an active stake by delegating to the staking contract
     /// @param stakeIndex The index of the stake to end
     function stakeEnd(uint256 stakeIndex) external nonReentrant {
-        require(stakeIndex < _stakes[msg.sender].length, "Invalid stake index");
-        Stake storage userStake = _stakes[msg.sender][stakeIndex];
-        require(block.timestamp >= userStake.endDay, "Stake period not yet ended");
-        require(userStake.value > 0, "Stake has already been ended");
+        require(hasRole(STAKING_ROLE, address(staking)), "Staking contract lacks STAKING_ROLE");
 
-        // Call the staking contract to handle payout and token transfers
+        // Delegate the stake ending process to the staking contract
         staking.stakeEnd(stakeIndex, msg.sender);
-
-        // Update the stake to indicate it has been ended
-        userStake.value = 0;
-        userStake.reward = 0;
 
         emit StakeEnded(msg.sender, stakeIndex, 0, 0, address(staking));
     }
@@ -216,76 +125,6 @@ contract SynergiXToken is Initializable, ERC20Burnable, AccessControl, UUPSUpgra
     function removeTrustedContract(address contractAddress) external onlyRole(ADMIN_ROLE) {
         revokeRole(TRUSTED_CONTRACT_ROLE, contractAddress);
         emit TrustedContractRemoved(contractAddress);
-    }
-
-    /// @notice Distributes rewards and penalties proportionally to all token holders
-    /// @dev Note: This function is optimized but may still be gas-intensive for large numbers of holders
-    function distributeRewardsAndPenalties() external onlyRole(ADMIN_ROLE) nonReentrant {
-        uint256 rewardPoolAmount = (rewardPool * REWARD_POOL_FRACTION) / 100;
-        uint256 penaltyPoolAmount = (penaltyPool * PENALTY_POOL_FRACTION) / 100;
-
-        rewardPool -= rewardPoolAmount;
-        penaltyPool -= penaltyPoolAmount;
-
-        emit RewardPoolUpdated(rewardPool);
-        emit PenaltyPoolUpdated(penaltyPool);
-
-        uint256 totalDistribution = rewardPoolAmount + penaltyPoolAmount;
-        uint256 totalSupplyTokens = totalSupply();
-
-        // Ensure there's something to distribute
-        if (totalDistribution == 0 || totalSupplyTokens == 0) {
-            return;
-        }
-
-        // Mint tokens proportionally to all token holders
-        // WARNING: This loop can run out of gas if there are too many holders
-        // Consider alternative approaches for distributing rewards
-        // such as snapshot-based distributions or user-initiated claims
-
-        // Placeholder: Emit an event indicating distribution
-        // Actual distribution logic should be handled off-chain or through a more efficient mechanism
-        emit RewardPoolUpdated(rewardPool);
-        emit PenaltyPoolUpdated(penaltyPool);
-
-        _lastRewardDistribution = block.timestamp;
-    }
-
-    /// @notice Sets a new reward pool amount
-    /// @param newRewardPool The new amount for the reward pool
-    function setRewardPool(uint256 newRewardPool) external onlyRole(ADMIN_ROLE) {
-        require(newRewardPool >= rewardPool, "New reward pool must be >= current pool");
-        rewardPool = newRewardPool;
-        emit RewardPoolUpdated(rewardPool);
-    }
-
-    /// @notice Sets a new penalty pool amount
-    /// @param newPenaltyPool The new amount for the penalty pool
-    function setPenaltyPool(uint256 newPenaltyPool) external onlyRole(ADMIN_ROLE) {
-        require(newPenaltyPool >= penaltyPool, "New penalty pool must be >= current pool");
-        penaltyPool = newPenaltyPool;
-        emit PenaltyPoolUpdated(penaltyPool);
-    }
-
-    /// @notice Sets the reward pool percentage
-    /// @param rewardPoolPercentage The new reward pool percentage (0-100)
-    function setRewardPoolPercentage(uint256 rewardPoolPercentage) external onlyRole(ADMIN_ROLE) {
-        require(
-            rewardPoolPercentage <= 100,
-            "Reward pool percentage must be between 0 and 100"
-        );
-        _rewardPoolPercentage = rewardPoolPercentage;
-        emit RewardPoolPercentageUpdated(_rewardPoolPercentage);
-    }
-
-    /// @notice Pauses all token transfers
-    function pause() external onlyRole(ADMIN_ROLE) {
-        _paused = true;
-    }
-
-    /// @notice Unpauses all token transfers
-    function unpause() external onlyRole(ADMIN_ROLE) {
-        _paused = false;
     }
 
     /// @notice Overrides the ERC20 _beforeTokenTransfer to implement pause and lockup logic
@@ -321,43 +160,6 @@ contract SynergiXToken is Initializable, ERC20Burnable, AccessControl, UUPSUpgra
     /// @param admin The address from which ADMIN_ROLE will be revoked
     function revokeAdminRole(address admin) external onlyRole(ADMIN_ROLE) {
         revokeRole(ADMIN_ROLE, admin);
-    }
-
-    /// @notice Retrieves the number of stakes for a staker
-    /// @param staker The address of the staker
-    /// @return The number of active stakes
-    function getNumStakes(address staker) external view returns (uint256) {
-        return _stakes[staker].length;
-    }
-
-    /// @notice Retrieves stake information for a given staker and stake index
-    /// @param staker The address of the staker
-    /// @param stakeIndex The index of the stake
-    /// @return value The staked value
-    /// @return startDay The start timestamp of the stake
-    /// @return endDay The end timestamp of the stake
-    /// @return gracePeriodEnd The end timestamp of the grace period
-    /// @return reward The calculated reward
-    function getStakeInfo(address staker, uint256 stakeIndex)
-        external
-        view
-        returns (
-            uint256 value,
-            uint256 startDay,
-            uint256 endDay,
-            uint256 gracePeriodEnd,
-            uint256 reward
-        )
-    {
-        require(stakeIndex < _stakes[staker].length, "Invalid stake index");
-        Stake storage userStake = _stakes[staker][stakeIndex];
-        return (
-            userStake.value,
-            userStake.startDay,
-            userStake.endDay,
-            userStake.gracePeriodEnd,
-            userStake.reward
-        );
     }
 
     /// @notice Overrides supportsInterface to include AccessControl interfaces
